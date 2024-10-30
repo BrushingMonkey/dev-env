@@ -1,36 +1,44 @@
-# This is a basic workflow to help you get started with Actions
+name: Deploy to Kubernetes
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  repository_dispatch:
+    types: [deploy]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+env:
+  AWS_REGION: us-east-1  # Change to your AWS region
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  deploy:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
-      # Runs a set of commands using the runners shell
-      - name: Run a multi-line script
+      - name: Update kubeconfig
         run: |
-          echo Add other actions to build,
-          echo test, and deploy your project.
+          aws eks update-kubeconfig --name your-cluster-name  # Change to your cluster name
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: '3.11.1'
+
+      - name: Deploy to Kubernetes
+        run: |
+          helm upgrade --install weather-app ./helm-chart \
+            --namespace ${{ github.event.client_payload.namespace }} \
+            --create-namespace \
+            --set image.tag=${{ github.event.client_payload.build_number }} \
+            --set image.repository=rebachi/eks \
+            --set service.type=ClusterIP \
+            --set service.port=80 \
+            --set service.targetPort=5000 \
+            --set ingress.className=nginx \
+            --wait
