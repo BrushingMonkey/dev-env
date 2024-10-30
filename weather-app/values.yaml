@@ -1,0 +1,19 @@
+replicaCount: 2
+
+image:
+  repository: rebachi/eks
+  tag: latest  # This will be updated by Jenkins pipeline
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 5000
+
+ingress:
+  className: nginx
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
