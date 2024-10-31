@@ -57,7 +57,7 @@ jobs:
           
       - name: Deploy Application
         run: |
-          helm upgrade --install weather-app ./helm-chart \
+          helm upgrade --install weather-app ./weather-app \
             --namespace ${{ github.event.client_payload.namespace }} \
             --create-namespace \
             --set image.tag=${{ github.event.client_payload.build_number }} \
