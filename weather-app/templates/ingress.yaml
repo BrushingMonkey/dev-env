@@ -9,10 +9,10 @@ metadata:
 spec:
   ingressClassName: {{ .Values.ingress.className }}
   rules:
-    - host: {{ .Values.ingress.hosts.host | quote }}
+    - host: {{ (index .Values.ingress.hosts 0).host | quote }}
       http:
         paths:
-          {{- range .Values.ingress.hosts.paths }}
+          {{- range (index .Values.ingress.hosts 0).paths }}
           - path: {{ .path }}
             pathType: {{ .pathType }}
             backend:
