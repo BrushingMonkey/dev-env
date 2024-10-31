@@ -57,7 +57,7 @@ jobs:
           
       - name: Deploy Application
         run: |
-          helm upgrade --install weather-app ./weather-app \
+          helm upgrade --install weather-app ./helm-chart \
             --namespace ${{ github.event.client_payload.namespace }} \
             --create-namespace \
             --set image.tag=${{ github.event.client_payload.build_number }} \
@@ -66,5 +66,7 @@ jobs:
             --set service.port=80 \
             --set service.targetPort=5000 \
             --set ingress.className=nginx \
-            --set ingress.hosts[0].host=${{ env.LOAD_BALANCER_HOSTNAME }} \
+            --set "ingress.hosts[0].host=${{ env.LOAD_BALANCER_HOSTNAME }}" \
+            --set "ingress.hosts[0].paths[0].path=/" \
+            --set "ingress.hosts[0].paths[0].pathType=Prefix" \
             --wait
